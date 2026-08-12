@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">المتجر الذكي</string>
+    <string name="title_activity_main">المتجر الذكي</string>
+    <string name="package_name">com.salahbousbia.smartstore</string>
+    <string name="custom_url_scheme">com.salahbousbia.smartstore</string>
+</resources>

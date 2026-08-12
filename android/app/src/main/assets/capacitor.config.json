@@ -1,0 +1,6 @@
+{
+	"appId": "com.salahbousbia.smartstore",
+	"appName": "المتجر الذكي",
+	"webDir": "dist",
+	"bundledWebRuntime": false
+}

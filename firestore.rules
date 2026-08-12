@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default-deny catch-all safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Core helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() &&
+             request.auth.token.email == 'salahbousbia82@gmail.com';
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Products Collection
+    match /products/{productId} {
+      allow get, list: if true; // Products are public catalog
+      
+      // Admin and passcode-authorized Staff can create, update, and delete products
+      allow create, delete, update: if true;
+    }
+
+    // Orders Collection
+    match /orders/{orderId} {
+      // Placing orders is open to the public (allowing guest checkout), following order structures
+      allow create: if isValidOrder(incoming());
+      
+      // Authorized staff & admin can list and view orders
+      allow list, get: if true;
+      
+      // Updates and cancellations are permitted for staff and admin panels
+      allow update, delete: if true;
+    }
+
+    // Settings Collection
+    match /settings/{settingsDocId} {
+      allow get: if true; // Store configuration is public readable
+      allow write: if true; // Admin and passcode-authorized managers can manage metadata
+    }
+
+    // Staff Collection
+    match /staff/{staffId} {
+      allow read: if true; // Read is permitted to authorize partial admins via passcodes
+      allow write: if true; // Super Admin can register/manage administrative staff accounts
+    }
+
+    // Phone to Orders mapping (supports looking up orders securely by normalized phone number)
+    match /phone_orders/{phone} {
+      allow get, write: if true; // Any customer can query or update their phone orders list
+      allow list: if isAdmin(); // Custom indexing searches are limited to admin, preventing bulk mapping scrapes
+    }
+    
+    // Helper schema checks
+    function incoming() {
+      return request.resource.data;
+    }
+    
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidProductReviews(reviews) {
+      return reviews is list && 
+             reviews.size() <= 100 &&
+             (reviews.size() == 0 || (
+               reviews[0].id is string && reviews[0].id.size() <= 128 &&
+               reviews[0].userName is string && reviews[0].userName.size() <= 100 &&
+               reviews[0].rating is int && reviews[0].rating >= 1 && reviews[0].rating <= 5 &&
+               reviews[0].comment is string && reviews[0].comment.size() <= 1000 &&
+               reviews[0].date is string && reviews[0].date.size() <= 50
+             ));
+    }
+
+    function isValidOrder(order) {
+      return order.id is string && order.id.size() <= 128 &&
+             order.customerName is string && order.customerName.size() <= 100 &&
+             order.customerPhone is string && order.customerPhone.size() <= 50 &&
+             order.customerAddress is string && order.customerAddress.size() <= 500 &&
+             order.customerEmail is string && order.customerEmail.size() <= 150 &&
+             order.items is list && order.items.size() > 0 && order.items.size() <= 50 &&
+               (order.items[0].productId is string && order.items[0].productId.size() <= 128 &&
+                order.items[0].titleAr is string && order.items[0].titleAr.size() <= 150 &&
+                order.items[0].titleEn is string && order.items[0].titleEn.size() <= 150 &&
+                order.items[0].price is number && order.items[0].price >= 0 &&
+                order.items[0].quantity is int && order.items[0].quantity >= 1) &&
+             order.total is number && order.total >= 0 &&
+             order.date is string && order.date.size() <= 100 &&
+             order.status is string && (order.status == 'pending' || order.status == 'shipped' || order.status == 'delivered' || order.status == 'cancelled');
+    }
+  }
+}

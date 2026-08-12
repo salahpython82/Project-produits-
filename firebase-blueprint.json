@@ -1,0 +1,146 @@
+{
+  "entities": {
+    "ProductReview": {
+      "title": "Product Review",
+      "description": "Customer feedback and rating for a product.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique review identifier." },
+        "userName": { "type": "string", "description": "Name of the customer." },
+        "rating": { "type": "integer", "description": "Rating out of 5." },
+        "comment": { "type": "string", "description": "Review comment text." },
+        "date": { "type": "string", "description": "Date of the review." }
+      },
+      "required": ["id", "userName", "rating", "comment", "date"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "A product offered in the storefront catalog.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique product identifier." },
+        "titleAr": { "type": "string", "description": "Product title in Arabic." },
+        "titleEn": { "type": "string", "description": "Product title in English." },
+        "descriptionAr": { "type": "string", "description": "Product description in Arabic." },
+        "descriptionEn": { "type": "string", "description": "Product description in English." },
+        "price": { "type": "number", "description": "Product price in local currency." },
+        "image": { "type": "string", "description": "Image URL for the product." },
+        "category": { "type": "string", "description": "Standard category key." },
+        "categoryAr": { "type": "string", "description": "Arabic category layout name." },
+        "stock": { "type": "integer", "description": "Currently available stock items." },
+        "reviews": {
+          "type": "array",
+          "description": "Array of product reviews.",
+          "items": { "type": "object", "$ref": "ProductReview" }
+        }
+      },
+      "required": ["id", "titleAr", "titleEn", "descriptionAr", "descriptionEn", "price", "image", "category", "categoryAr", "stock"]
+    },
+    "OrderItem": {
+      "title": "Order Item",
+      "description": "An item included under a paid order.",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string", "description": "Referenced Product ID." },
+        "titleAr": { "type": "string", "description": "Product title in Arabic during ordering." },
+        "titleEn": { "type": "string", "description": "Product title in English during ordering." },
+        "price": { "type": "number", "description": "Locked price at checkout." },
+        "quantity": { "type": "integer", "description": "Quantity requested." }
+      },
+      "required": ["productId", "titleAr", "titleEn", "price", "quantity"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer purchase invoice and fulfillment record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique order identifier." },
+        "customerName": { "type": "string", "description": "Customer full name." },
+        "customerPhone": { "type": "string", "description": "Active phone number." },
+        "customerAddress": { "type": "string", "description": "Fulfillment delivery location." },
+        "customerEmail": { "type": "string", "description": "Fulfillment contact email (optional)." },
+        "items": {
+          "type": "array",
+          "description": "List of ordered items.",
+          "items": { "type": "object", "$ref": "OrderItem" }
+        },
+        "total": { "type": "number", "description": "Total checkout price." },
+        "date": { "type": "string", "description": "Localization readable purchase date." },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "shipped", "delivered", "cancelled"],
+          "description": "Fulfillment status."
+        }
+      },
+      "required": ["id", "customerName", "customerPhone", "customerAddress", "items", "total", "date", "status"]
+    },
+    "StoreSettings": {
+      "title": "Store Settings",
+      "description": "Identity, contact data, and design setups for Baraka Store Al-Tayebin.",
+      "type": "object",
+      "properties": {
+        "storeNameAr": { "type": "string", "description": "Arabic store brand name." },
+        "storeNameEn": { "type": "string", "description": "English store brand name." },
+        "ownerNameAr": { "type": "string", "description": "Arabic owner name." },
+        "ownerNameEn": { "type": "string", "description": "English owner name." },
+        "ownerPhone": { "type": "string", "description": "Owner contact telephone." },
+        "ownerEmail": { "type": "string", "description": "Owner support email address." },
+        "logoUrl": { "type": "string", "description": "Store avatar / logo image URL." },
+        "currencyAr": { "type": "string", "description": "Arabic currency symbol." },
+        "currencyEn": { "type": "string", "description": "English currency symbol." },
+        "promoMsgAr": { "type": "string", "description": "Banner message Arabic." },
+        "promoMsgEn": { "type": "string", "description": "Banner message English." }
+      },
+      "required": ["storeNameAr", "storeNameEn", "ownerNameAr", "ownerNameEn", "ownerPhone", "ownerEmail", "logoUrl", "currencyAr", "currencyEn"]
+    },
+    "PhoneOrders": {
+      "title": "Phone Orders",
+      "description": "Mapping from normalized phone number to array of placed order IDs for ultra-secure list search by customers.",
+      "type": "object",
+      "properties": {
+        "orderIds": {
+          "type": "array",
+          "description": "Array of Order IDs linked to this phone number.",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["orderIds"]
+    },
+    "StaffMember": {
+      "title": "Staff Member",
+      "description": "Administrative staff of the platform with partial access.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique staff identifier." },
+        "nameAr": { "type": "string", "description": "Staff name in Arabic." },
+        "nameEn": { "type": "string", "description": "Staff name in English." },
+        "username": { "type": "string", "description": "Unique staff username." },
+        "passcode": { "type": "string", "description": "Staff login passcode." },
+        "createdAt": { "type": "string", "description": "Registration date." }
+      },
+      "required": ["id", "nameAr", "nameEn", "username", "passcode", "createdAt"]
+    }
+  },
+  "firestore": {
+    "products/{productId}": {
+      "schema": "Product",
+      "description": "The storefront general product catalog collection searchable and editable by admin."
+    },
+    "orders/{orderId}": {
+      "schema": "Order",
+      "description": "Customer financial orders tracking system."
+    },
+    "settings/{settingsDocId}": {
+      "schema": "StoreSettings",
+      "description": "Global settings document for the storefront (using ID 'storeSettings')."
+    },
+    "phone_orders/{phone}": {
+      "schema": "PhoneOrders",
+      "description": "Mapping registry from client phone to unique list of order IDs, permitting secure single-lookup of active checkouts by the customer."
+    },
+    "staff/{staffId}": {
+      "schema": "StaffMember",
+      "description": "The administrative staff collection managed strictly by the Super Admin."
+    }
+  }
+}
